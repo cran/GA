@@ -1,0 +1,17 @@
+citHeader("To cite 'GA' in publications use:")
+
+citEntry(entry   = "article",
+  title        = "{GA}: A Package for Genetic Algorithms in R",
+  author       = personList(person(given = "Luca", 
+                                   family = "Scrucca",
+                                   email = "luca@stat.unipg.it")),
+  journal      = "Submitted to Journal of Statistical Software",
+  year         = 2012,
+#  pages        = "11--17",
+#  volume       = "",
+#   url          = "http://CRAN.R-project.org/doc/Rnews/",
+  textVersion  = paste("Scrucca, L. (2012).",
+                       "GA: A Package for Genetic Algorithms in R.",
+                       "Submitted to Journal of Statistical Software")
+)
+

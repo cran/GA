@@ -1,0 +1,9 @@
+exportPattern("^[^\\.]")
+
+importFrom("graphics", plot)
+
+export("ga", "gaControl")
+exportClasses("ga") 
+exportMethods("print", "show", "summary", "plot")
+
+
