@@ -187,7 +187,6 @@ gareal_lsSelection <- function(object, ...)
     }
   fscaled <- a*f + b
   prob <- abs(fscaled)/sum(abs(fscaled))
-#  if(object@iter == 28) browser()
   sel <- sample(1:object@popSize, size = object@popSize, 
                 prob = pmin(pmax(0, prob), 1, na.rm = TRUE), 
                 replace = TRUE)

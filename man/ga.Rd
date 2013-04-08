@@ -33,7 +33,7 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{fitness}{the fitness function, any allowable R function which takes as input an individual \code{string} representing a potential solution, and returns a numerical value describing its ``fitness''.}
 
-\item{\dots}{additional arguments to be passed to the fitness function.}
+\item{\dots}{additional arguments to be passed to the fitness function. This allows to write fitness functions that keep some variables fixed during the search.}
 
 \item{min}{a vector of length equal to the decision variables providing the minimum of the search space in case of real-valued or permutation encoded optimizations.}
 
@@ -96,11 +96,11 @@ Goldberg D (1989). \emph{Genetic Algorithms in Search, Optimization, and Machine
 Haupt RL, Haupt SE (2004). \emph{Practical Genetic Algorithms}. 2nd edition. John Wiley & Sons, New York.
 
 Scrucca L (2012). GA: A Package for Genetic Algorithms in R.
-Submitted to \emph{Journal of Statistical Sofware}.
+\emph{Journal of Statistical Software}, 53(4), 1-37, \url{http://www.jstatsoft.org/v53/i04/}.
 
 Sivanandam S, Deepa S (2007). \emph{Introduction to Genetic Algorithms}. Springer-Verlag, Berlin Heidelberg.
 
-Yu X, Gen M (2010). \emph{Introduction to Evolutionary Algorithms}. Springer-Verlag, Berlin Hei- delberg.
+Yu X, Gen M (2010). \emph{Introduction to Evolutionary Algorithms}. Springer-Verlag, Berlin Heidelberg.
 }
   
 \author{Luca Scrucca}
@@ -135,6 +135,7 @@ abline(v = GA@solution, lty = 3)
 f <- function(x)  (x^2+x)*cos(x) # -10 < x < 10
 curve(f, -10, 10)
 
+# write your own tracing function
 monitor <- function(obj) 
 { 
   curve(f, -10, 10, main = paste("iteration =", obj@iter))
@@ -145,9 +146,8 @@ monitor <- function(obj)
 \dontrun{
 GA <- ga(type = "real-valued", fitness = f, min = -10, max = 10, monitor = monitor)
 }
-\dontshow{
+# or if you want to suppress the tracing
 GA <- ga(type = "real-valued", fitness = f, min = -10, max = 10, monitor = NULL)
-}
 summary(GA)
 
 monitor(GA)
