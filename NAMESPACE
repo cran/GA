@@ -1,5 +1,6 @@
 exportPattern("^[^\\.]")
 
+import("methods")
 importFrom("graphics", plot)
 
 export("ga", "gaControl")

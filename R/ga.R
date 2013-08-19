@@ -21,6 +21,8 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                maxfitness = -Inf,
                names = NULL,
                suggestions, 
+               keepBest = FALSE,
+               parallel = FALSE,
                seed) 
 {
 
@@ -72,15 +74,65 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
     { suggestions <- matrix(nrow = 0, ncol = nvars) }
   else
     { if(is.vector(suggestions)) 
-        suggestions <- matrix(suggestions, nrow = 1)
+        { if(nvars > 1) suggestions <- matrix(suggestions, nrow = 1)
+          else          suggestions <- matrix(suggestions, ncol = 1) }
       else
-        suggestions <- as.matrix(suggestions)
+        { suggestions <- as.matrix(suggestions) }
       if(nvars != ncol(suggestions))
         stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
     }
+  
+  # Start parallel computing (if needed)
+  parallel <- if(is.logical(parallel)) 
+                { if(parallel) gaParallel(parallel) else FALSE }
+              else { gaParallel(parallel) }
+  
+#   ## parallel computing #####################################################
+#   # set default parallel functionality depending on system OS
+#   parallelType <- if(.Platform$OS.type == "windows") 
+#                     "snow" else "multicore"
+#   if(is.character(parallel))
+#     { parallelType <- parallel
+#       parallel <- TRUE }
+#   # start "parallel backend" if needed
+#   if(parallel)
+#     { # load package doParallel and all its dependencies
+#       suppressPackageStartupMessages(availPkgs <- require("doParallel"))
+#       if(!availPkgs)
+#         stop("Required packages for parallel computing not available!")
+#       if(is.numeric(parallel)) 
+#         { # get number of cores from parallel if numeric
+#           numCores <- as.integer(parallel) }
+#       else 
+#         { # get the current number of cores available
+#           numCores <- detectCores() }
+#       if(parallelType == "snow")
+#         { # snow functionality on Unix-like systems & Windows
+#           cl <- makeCluster(numCores)
+#           # export environment
+#           clusterExport(cl, varlist = ls(envir = parent.frame(), 
+#                                          all.names = TRUE),
+#                         envir = parent.frame()
+#                         # envir = parent.env(environment())
+#                        )
+#           # load current packages in workers
+#           pkgs <- .packages()
+#           lapply(pkgs, function(pkg) 
+#                  clusterCall(cl, library, package = pkg, 
+#                              character.only = TRUE))
+#           #
+#           registerDoParallel(cl) 
+#       }
+#       else 
+#         { # multicore functionality on Unix-like systems
+#           registerDoParallel(cores = numCores) }
+#     }
+#   ###########################################################################
 
   bestEval <- rep(NA, maxiter)
   meanEval <- rep(NA, maxiter)
+  bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
+             else         list()
   Fitness <- rep(NA, popSize)
 
   object <- new("ga", 
@@ -101,7 +153,8 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                 pmutation = pmutation,
                 fitness = Fitness, 
                 best = bestEval, 
-                mean = meanEval)
+                mean = meanEval,
+                bestSol = bestSol)
 
   if(!missing(seed)) set.seed(seed)
 
@@ -112,25 +165,35 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
     { Pop[1:ng,] <- suggestions }
   # fill the rest with a random population
   if(popSize > ng)
-    { Pop[(ng+1):popSize,] <- population(object) }
+    { Pop[(ng+1):popSize,] <- population(object)[1:(popSize-ng),] }
   object@population <- Pop
 
   # start iterations
   for(iter in 1:maxiter)
      {
-      # evalute fitness function (if needed)
-      for(i in 1:popSize) 
-         if(is.na(Fitness[i]))
-           { Fitness[i] <- fitness(Pop[i,], ...) } 
+      # evalute fitness function (if needed) 
+      if(!parallel)
+        { for(i in 1:popSize) 
+             if(is.na(Fitness[i]))
+               { Fitness[i] <- fitness(Pop[i,], ...) } 
+        }
+      else
+        { Fitness <- foreach(i = 1:popSize, .combine = "c") %dopar% 
+                     { if(is.na(Fitness[i])) fitness(Pop[i,], ...) 
+                       else                  Fitness[i] }
+        }
       bestEval[iter] <- max(Fitness, na.rm = TRUE)
       meanEval[iter] <- mean(Fitness, na.rm = TRUE)
-
+      
       # update object
       object@iter <- iter
       object@population <- Pop
       object@fitness <- Fitness
       object@best <- bestEval
       object@mean <- meanEval
+      
+      if(keepBest) 
+        object@bestSol[[iter]] <- unique(Pop[Fitness == bestEval[iter],,drop=FALSE])
 
       if(is.function(monitor)) 
         { monitor(object) }
@@ -222,6 +285,8 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
     }
   colnames(solution) <- parNames(object)
   object@solution <- solution
+  if(keepBest)
+    object@bestSol <- object@bestSol[!sapply(object@bestSol, is.null)]  
   
   # return an object of class 'ga'
   return(object)
@@ -248,6 +313,7 @@ setClass(Class = "ga",
                         fitness = "numericOrNA",
                         best = "numericOrNA", 
                         mean = "numericOrNA",
+                        bestSol = "list",
                         fitnessValue = "numeric",
                         solution = "matrix"
                       ),

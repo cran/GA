@@ -30,6 +30,7 @@
     \item{\code{fitness}}{}
     \item{\code{best}}{}
     \item{\code{mean}}{}
+    \item{\code{bestSol}}{}
     \item{\code{fitnessValue}}{}
     \item{\code{solution}}{}
   }

@@ -1,0 +1,13 @@
+%-------------------------------------------------------------------%
+% This is *not* the source of the vignette. It is just a place      %
+% holder for R to recognize and list the vignettes of this package. %
+%-------------------------------------------------------------------%
+
+%\VignetteIndexEntry{Using parallel computing in GA package}
+%\VignetteKeywords{}
+%\VignettePackage{GA}
+
+\documentclass{article}
+\begin{document}
+\section*{}
+\end{document}

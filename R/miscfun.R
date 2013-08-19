@@ -2,8 +2,6 @@
 ## Conversion from/to decimal-binary
 ##
 
-
-
 decimal2binary <- function(x, length)
 {
   x <- as.integer(x)

@@ -2,6 +2,7 @@
 \alias{ga}
 \alias{show,ga-method}
 \alias{print,ga-method}
+\alias{gaParallel}
 
 \title{Genetic Algorithms}
 
@@ -25,6 +26,8 @@ ga(type = c("binary", "real-valued", "permutation"),
    maxfitness = -Inf,
    names = NULL,
    suggestions, 
+   keepBest = FALSE,
+   parallel = FALSE,
    seed)
 }
 
@@ -68,6 +71,10 @@ ga(type = c("binary", "real-valued", "permutation"),
 \item{names}{a vector of character strings providing the names of decision variables.}
 
 \item{suggestions}{a matrix of solutions string to be included in the initial population.}
+
+\item{keepBest}{a logical argument specifying if best solutions at each iteration should be saved in a slot called \code{bestSol}. See \code{\link{ga-class}}.}
+
+\item{parallel}{a logical argument specifying if parallel computing should be used (\code{TRUE}) or not (\code{FALSE}, default) for evaluating the fitness function. This argument could also be used to specify the number of cores to employ; by default, this is taken from \code{\link[parallel]{detectCores}}. Finally, the functionality of parallelization depends on system OS: on Windows only 'snow' type functionality is available, while on Unix/Linux/Mac OSX both 'snow' and 'multicore' (default) functionalities are available.}
 
 \item{seed}{an integer vector containing the random number generator state. This argument can be used to replicate the results of a GA search.}
 
@@ -170,6 +177,30 @@ GA <- ga(type = "real-valued", fitness =  function(x) -Rastrigin(x[1], x[2]),
          popSize = 50, maxiter = 100)
 summary(GA)
 plot(GA)
+
+## Parallel GA #######
+# Simple example of an expensive fitness function obtained artificially by
+# introducing a pause statement. 
+\dontrun{
+Rastrigin <- function(x1, x2)
+{
+  Sys.sleep(0.1)
+  20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
+}
+
+system.time(GA1 <- ga(type = "real-valued", 
+                     fitness =  function(x) -Rastrigin(x[1], x[2]),
+                     min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+                     popSize = 50, maxiter = 100, monitor = FALSE,
+                     seed = 12345))
+
+system.time(GA2 <- ga(type = "real-valued", 
+                     fitness =  function(x) -Rastrigin(x[1], x[2]),
+                     min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+                     popSize = 50, maxiter = 100, monitor = FALSE,
+                     seed = 12345, parallel = TRUE))
+}
+
 }
 
 \keyword{optimize}
