@@ -15,15 +15,15 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                pcrossover = 0.8, 
                pmutation = 0.1, 
                elitism = base::max(1, round(popSize*0.05)), 
-               monitor = gaMonitor,
                maxiter = 100,
                run = maxiter,
-               maxfitness = -Inf,
+               maxfitness = Inf,
                names = NULL,
-               suggestions, 
+               suggestions = NULL, 
                keepBest = FALSE,
                parallel = FALSE,
-               seed) 
+               monitor = gaMonitor,
+               seed = NULL) 
 {
 
   call <- match.call()
@@ -39,15 +39,19 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
   if(!is.function(fitness)) 
     { stop("A fitness function must be provided") }
   if(popSize < 10) 
-    { stop("The population size must be at least 10.") }
+    { warning("The population size is less than 10.") }
   if(maxiter < 1) 
     { stop("The maximum number of iterations must be at least 1.") }
   if(elitism > popSize) 
     { stop("The elitism must be larger that population size.") }
   if(pcrossover < 0 | pcrossover > 1)
     { stop("Probability of crossover must be between 0 and 1.") }
-  if(pmutation < 0 | pmutation > 1)
-    { stop("Probability of mutation must be between 0 and 1.") }
+  if(is.numeric(pmutation))
+    { if(pmutation < 0 | pmutation > 1)
+        { stop("If numeric probability of mutation must be between 0 and 1.") }
+      else if(!is.function(population))
+             { stop("pmutation must be a numeric value in (0,1) or a function.") }
+  }
   if(missing(min) & missing(max) & missing(nBits))
     { stop("A min and max range of values (for 'real-valued' or 'permutation' GA) or nBits (for 'binary' GA) must be provided!") }
   
@@ -70,7 +74,7 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                          }
         )
 
-  if(missing(suggestions))
+  if(is.null(suggestions))
     { suggestions <- matrix(nrow = 0, ncol = nvars) }
   else
     { if(is.vector(suggestions)) 
@@ -81,11 +85,13 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
       if(nvars != ncol(suggestions))
         stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
     }
-  
+
   # Start parallel computing (if needed)
   parallel <- if(is.logical(parallel)) 
                 { if(parallel) gaParallel(parallel) else FALSE }
               else { gaParallel(parallel) }
+  on.exit(if(parallel)
+            stopCluster(attr(parallel, "cluster")) )
   
 #   ## parallel computing #####################################################
 #   # set default parallel functionality depending on system OS
@@ -129,8 +135,8 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
 #     }
 #   ###########################################################################
 
-  bestEval <- rep(NA, maxiter)
-  meanEval <- rep(NA, maxiter)
+  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 4)
+  colnames(fitnessSummary) <- names(gaSummary(rnorm(10)))
   bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
              else         list()
   Fitness <- rep(NA, popSize)
@@ -150,16 +156,15 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                 population = matrix(), 
                 elitism = elitism, 
                 pcrossover = pcrossover, 
-                pmutation = pmutation,
+                pmutation = if(is.numeric(pmutation)) pmutation else NA,
                 fitness = Fitness, 
-                best = bestEval, 
-                mean = meanEval,
+                summary = fitnessSummary,
                 bestSol = bestSol)
 
-  if(!missing(seed)) set.seed(seed)
+  if(!is.null(seed)) set.seed(seed)
 
   # generate beginning population
-  Pop <- matrix(NA, nrow = popSize, ncol = nvars)
+  Pop <- matrix(as.double(NA), nrow = popSize, ncol = nvars)
   ng <- min(nrow(suggestions), popSize)
   if(ng > 0) # use suggestion if provided
     { Pop[1:ng,] <- suggestions }
@@ -169,11 +174,11 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
   object@population <- Pop
 
   # start iterations
-  for(iter in 1:maxiter)
+  for(iter in seq_len(maxiter))
      {
       # evalute fitness function (if needed) 
       if(!parallel)
-        { for(i in 1:popSize) 
+        { for(i in seq_len(popSize))
              if(is.na(Fitness[i]))
                { Fitness[i] <- fitness(Pop[i,], ...) } 
         }
@@ -182,34 +187,33 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                      { if(is.na(Fitness[i])) fitness(Pop[i,], ...) 
                        else                  Fitness[i] }
         }
-      bestEval[iter] <- max(Fitness, na.rm = TRUE)
-      meanEval[iter] <- mean(Fitness, na.rm = TRUE)
+      fitnessSummary[iter,] <- gaSummary(Fitness)
       
       # update object
       object@iter <- iter
       object@population <- Pop
       object@fitness <- Fitness
-      object@best <- bestEval
-      object@mean <- meanEval
+      object@summary <- fitnessSummary
       
       if(keepBest) 
-        object@bestSol[[iter]] <- unique(Pop[Fitness == bestEval[iter],,drop=FALSE])
+        # object@bestSol[[iter]] <- unique(Pop[Fitness == bestEval[iter],,drop=FALSE])
+        object@bestSol[[iter]] <- unique(Pop[Fitness == fitnessSummary[iter,1],,drop=FALSE])
 
       if(is.function(monitor)) 
         { monitor(object) }
 
       # check stopping criteria
       if(iter > 1)
-        { if(bestEval[iter] > bestEval[iter-1]) 
+        { if(fitnessSummary[iter,1] > fitnessSummary[iter-1,1]+gaControl("eps")) 
                object@run <- 1 
           else 
                object@run <- object@run + 1 
         }
       if(object@run >= run) break  
-      if(maxfitness > max(Fitness, na.rm = TRUE)) break
+      if(maxfitness < max(Fitness, na.rm = TRUE)) break
       if(object@iter == maxiter) break  
 
-      # PopNew <- matrix(NA, nrow = popSize, ncol = nvars)
+      # PopNew <- matrix(as.double(NA), nrow = popSize, ncol = nvars)
       # fitnessNew <- rep(NA, popSize)
       ord <- order(Fitness, decreasing = TRUE)
       PopSorted <- Pop[ord,,drop=FALSE]
@@ -231,24 +235,36 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
     
       # crossover
       if(is.function(crossover) & pcrossover > 0)
-        { nmating <- floor(popSize/2)
+        { 
+          nmating <- floor(popSize/2)
           mating <- matrix(sample(1:(2*nmating), size = (2*nmating)), ncol = 2)
-          for(i in 1:nmating)
-             { if(pcrossover > runif(1))
-                 { parents <- mating[i,]
-                   Crossover <- crossover(object, parents)
-                   Pop[parents,] <- Crossover$children
-                   Fitness[parents] <- Crossover$fitness
-                 }
-             }
+          for(i in seq_len(nmating))
+            { if(pcrossover > runif(1))
+                { parents <- mating[i,]
+                  Crossover <- crossover(object, parents)
+                  Pop[parents,] <- Crossover$children
+                  Fitness[parents] <- Crossover$fitness
+                }
+            }
+          #nmating <- popSize
+          #for(i in seq_len(nmating))
+          #   { if(pcrossover > runif(1))
+          #       { parents <- c(i,sample(1:popSize, size = 1))
+          #         Crossover <- crossover(object, parents)
+          #         Pop[i,] <- Crossover$children[1,]
+          #         Fitness[i] <- Crossover$fitness[1]
+          #       }
+          #   }
+             
           object@population <- Pop
           object@fitness <- Fitness
         }
 
       # mutation
-      if(is.function(mutation) & pmutation > 0)
-        { for(i in 1:popSize) 
-             { if(pmutation > runif(1)) 
+      pm <- if(is.function(pmutation)) pmutation(object) else pmutation
+      if(is.function(mutation) & pm > 0)
+        { for(i in seq_len(popSize)) 
+             { if(pm > runif(1)) 
                  { Mutation <- mutation(object, i)
                    Pop[i,] <- Mutation
                    Fitness[i] <- NA
@@ -270,10 +286,10 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
   
   }
       
-  # in case of premature convergence remove NA from fitness evalutations
-  object@best <- object@best[!is.na(object@best)]
-  object@mean <- object@mean[!is.na(object@mean)]
-  
+  # in case of premature convergence remove NA from summary fitness evalutations
+  object@summary <- na.exclude(object@summary)
+  attr(object@summary, "na.action") <- NULL
+
   # get solution(s)
   object@fitnessValue <- max(object@fitness, na.rm = TRUE)
   valueAt <- which(object@fitness == object@fitnessValue)
@@ -309,10 +325,9 @@ setClass(Class = "ga",
                         population = "matrix",
                         elitism = "numeric", 
                         pcrossover = "numeric", 
-                        pmutation = "numeric",
+                        pmutation = "numericOrNA",
                         fitness = "numericOrNA",
-                        best = "numericOrNA", 
-                        mean = "numericOrNA",
+                        summary = "matrix",
                         bestSol = "list",
                         fitnessValue = "numeric",
                         solution = "matrix"
@@ -328,19 +343,10 @@ function(object)
    cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
    cat("Available slots:\n")
    print(slotNames(object))
-   # cat("  type:", object@type, "\n")
-   # cat("  popSize:", object@popSize, "\n")
-   # cat("  pcrossover:", object@pcrossover, "\n")
-   # cat("  pmutation:", object@pmutation, "\n")
-   # cat("  elitism:", object@elitism, "\n")
-   # cat("  iter:", object@iter, "\n")
 }) 
 
-
-setMethod("summary", "ga", 
-function(object, ...)
+summary.ga <- function(object, ...)
 {
-
   nvars <- ncol(object@population)
   varnames <- parNames(object)
   domain <- NULL
@@ -359,7 +365,7 @@ function(object, ...)
   out <- list(type = object@type,
               popSize = object@popSize,
               maxiter = object@maxiter,
-              elistism = object@elitism,
+              elitism = object@elitism,
               pcrossover = object@pcrossover,
               pmutation = object@pmutation,
               domain = domain,
@@ -369,10 +375,18 @@ function(object, ...)
               solution = object@solution)  
   class(out) <- "summary.ga"
   return(out)
-})
+}
+
+setMethod("summary", "ga", summary.ga)
 
 print.summary.ga <- function(x, digits = getOption("digits"), ...)
 {
+  dotargs <- list(...)
+  if(is.null(dotargs$head)) dotargs$head <- 10
+  if(is.null(dotargs$tail)) dotargs$tail <- 1
+  if(is.null(dotargs$chead)) dotargs$chead <- 20
+  if(is.null(dotargs$ctail)) dotargs$ctail <- 1
+  
   cat("+-----------------------------------+\n")
   cat("|         Genetic Algorithm         |\n")
   cat("+-----------------------------------+\n\n")
@@ -391,7 +405,10 @@ print.summary.ga <- function(x, digits = getOption("digits"), ...)
 
   if(!is.null(x$suggestions))
     { cat(paste("Suggestions", "\n"))
-      print(x$suggestions, digits = digits)
+      do.call(".printShortMatrix", 
+              c(list(x$suggestions, digits = digits), 
+                dotargs[c("head", "tail", "chead", "ctail")]))
+      # print(x$suggestions, digits = digits, ...)
     }
 
   cat("\nGA results: \n")
@@ -401,42 +418,50 @@ print.summary.ga <- function(x, digits = getOption("digits"), ...)
     { cat(paste("Solutions              = \n")) }
   else
     { cat(paste("Solution               = \n")) }
-  print(x$solution, digits = digits)
+  do.call(".printShortMatrix", 
+          c(list(x$solution, digits = digits), 
+            dotargs[c("head", "tail", "chead", "ctail")]))
+  # print(x$solution, digits = digits, ...)
 
   invisible()
 }
 
 
-setMethod("plot", "ga", 
-function(x, y, ylim, cex.points = 0.8, col = c("green3", "dodgerblue3"), pch = c(20, 17), lty = c(1,2), grid = graphics:::grid, ...)
+plot.ga <- function(x, y, ylim, cex.points = 0.7,
+                    col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
+                    pch = c(16, 1), lty = c(1,2),
+                    grid = graphics:::grid, ...)
 {
   object <- x  # Argh.  Really want to use 'object' anyway
-  is.final <- !(any(is.na(object@mean)))
+  is.final <- !(any(is.na(object@summary[,1])))
   iters <- if(is.final) 1:object@iter else 1:object@maxiter
-  plot(iters, object@best, type = "n",
-       ylim = if(missing(ylim)) range(object@mean, object@best, na.rm = TRUE)
-              else ylim, 
+  summary <- object@summary
+  if(missing(ylim)) 
+    ylim <- range(object@summary[,c(1,3)], na.rm = TRUE, finite = TRUE)
+  plot(iters, summary[,1], type = "n", ylim = ylim, 
        xlab = "Generation", ylab = "Fitness value")
   if(is.final & is.function(grid)) 
     { grid() }
-  points(iters, object@best,
-         type = ifelse(is.final, "b", "p"),
+  points(iters, summary[,1], type = ifelse(is.final, "b", "p"),
          pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
-  points(iters, object@mean,
-         type = ifelse(is.final, "b", "p"),
+  points(iters, summary[,2], type = ifelse(is.final, "b", "p"),
          pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
   if(is.final)
-    { legend("bottomright", legend = c("Best", "Mean"), 
-             col = col, pch = pch, lty = lty, inset = 0.01) }
+    { polygon(c(iters, rev(iters)), 
+              c(summary[,3], rev(summary[,1])), 
+              border = FALSE, col = col[3])
+      legend("bottomright", legend = c("Best", "Mean"), 
+             col = col, pch = pch, lty = lty, pt.cex = cex.points, 
+             inset = 0.01) }
   else
     { title(paste("Iteration", object@iter), font.main = 1) }
     
-  out <- list(iter = iters,  
-              fitnessBest = object@best, 
-              fitnessMean = object@mean)
+  out <- cbind(iter = iters, summary)
   invisible(out)
-})
+}
 
+setMethod("plot", "ga", plot.ga)
+          
 # questa non funziona quando installa il pacchetto con NAMESPACE
 setGeneric(name = "parNames", 
            def = function(object, ...) { standardGeneric("parNames") }
@@ -463,7 +488,17 @@ function(object, ...)
 
 gaMonitor <- function(object, digits = getOption("digits"), ...)
 { 
+  fitness <- na.exclude(object@fitness)
   cat(paste("Iter =", object@iter, 
-            " | Mean =", format(object@mean[object@iter], digits = digits), 
-            " | Best =", format(object@best[object@iter], digits = digits), "\n"))
+            " | Mean =", format(mean(fitness), digits = digits), 
+            " | Best =", format(max(fitness), digits = digits), "\n"))
 }
+
+gaSummary <- function(x, ...)
+{
+  # compute summary for each step
+  x <- na.exclude(as.vector(x))
+  c(max = max(x), mean = mean(x), median = median(x), min = min(x))
+}
+
+  

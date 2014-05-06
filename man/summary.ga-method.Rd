@@ -2,6 +2,7 @@
 \docType{methods}
 %\alias{summary.ga-class}
 \alias{summary,ga-method}
+\alias{summary.ga}
 \alias{print.summary.ga}
 
 \title{Summary for Genetic Algorithms}

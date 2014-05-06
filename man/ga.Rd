@@ -20,19 +20,19 @@ ga(type = c("binary", "real-valued", "permutation"),
    pcrossover = 0.8, 
    pmutation = 0.1, 
    elitism = base::max(1, round(popSize*0.05)), 
-   monitor = gaMonitor,
    maxiter = 100,
    run = maxiter,
-   maxfitness = -Inf,
+   maxfitness = Inf,
    names = NULL,
-   suggestions, 
+   suggestions = NULL, 
    keepBest = FALSE,
    parallel = FALSE,
-   seed)
+   monitor = gaMonitor,
+   seed = NULL)
 }
 
 \arguments{
-\item{type}{the type of genetic algorithm to be run depending on the nature of decision variables. Possible values are: \code{"binary"} for binary representations of decision variables;  \code{"real-valued"} for optimization problems where the decision variables are floating-point representations of real numbers; \code{"permutation"} for problems that involves reordering of a list.}
+\item{type}{the type of genetic algorithm to be run depending on the nature of decision variables. Possible values are: \code{"binary"} for binary representations of decision variables; \code{"real-valued"} for optimization problems where the decision variables are floating-point representations of real numbers; \code{"permutation"} for problems that involves reordering of a list.}
 
 \item{fitness}{the fitness function, any allowable R function which takes as input an individual \code{string} representing a potential solution, and returns a numerical value describing its ``fitness''.}
 
@@ -60,8 +60,6 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{elitism}{the number of best fitness individuals to survive at each generation. By default the top 5\% individuals will survive at each iteration.}
 
-\item{monitor}{an R function which takes as input the current state of the \code{ga} object and show the evolution of the search. By default, the function \code{\link{gaMonitor}} prints the average and best fitness values at each iteration. If set to \code{plot} these information are plotted on a graphical device. Other functions can be written by the user and supplied as argument.}
-
 \item{maxiter}{the maximum number of iterations to run before the GA search is halted.}
 
 \item{run}{the number of consecutive generations without any improvement in the best fitness value before the GA is stopped.}
@@ -70,13 +68,15 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{names}{a vector of character strings providing the names of decision variables.}
 
-\item{suggestions}{a matrix of solutions string to be included in the initial population.}
+\item{suggestions}{a matrix of solutions strings to be included in the initial population. If provided the number of columns must match the number of decision variables.}
 
 \item{keepBest}{a logical argument specifying if best solutions at each iteration should be saved in a slot called \code{bestSol}. See \code{\link{ga-class}}.}
 
 \item{parallel}{a logical argument specifying if parallel computing should be used (\code{TRUE}) or not (\code{FALSE}, default) for evaluating the fitness function. This argument could also be used to specify the number of cores to employ; by default, this is taken from \code{\link[parallel]{detectCores}}. Finally, the functionality of parallelization depends on system OS: on Windows only 'snow' type functionality is available, while on Unix/Linux/Mac OSX both 'snow' and 'multicore' (default) functionalities are available.}
 
-\item{seed}{an integer vector containing the random number generator state. This argument can be used to replicate the results of a GA search.}
+\item{monitor}{an R function which takes as input the current state of the \code{ga} object and show the evolution of the search. By default, the function \code{\link{gaMonitor}} prints the average and best fitness values at each iteration. If set to \code{plot} these information are plotted on a graphical device. Other functions can be written by the user and supplied as argument.}
+
+\item{seed}{an integer value containing the random number generator state. This argument can be used to replicate the results of a GA search.}
 
 }
 
@@ -86,7 +86,7 @@ Genetic algorithms (GAs) are stochastic search algorithms inspired by the basic 
 The \pkg{GA} package is a collection of general purpose functions that provide a flexible set of tools for applying a wide range of genetic algorithm methods.
 }
   
-\value{Returns an object of class \code{\link{ga-class}}.}
+\value{Returns an object of class \code{ga-class}. See \code{\link{ga-class}} for a description of available slots information.}
 
 \references{
 
@@ -110,7 +110,7 @@ Sivanandam S, Deepa S (2007). \emph{Introduction to Genetic Algorithms}. Springe
 Yu X, Gen M (2010). \emph{Introduction to Evolutionary Algorithms}. Springer-Verlag, Berlin Heidelberg.
 }
   
-\author{Luca Scrucca}
+\author{Luca Scrucca \email{luca@stat.unipg.it}}
 
 %\note{}
 

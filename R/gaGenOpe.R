@@ -69,7 +69,7 @@ ga_spCrossover <- function(object, parents, ...)
   fitness <- object@fitness[parents]
   parents <- object@population[parents,,drop = FALSE]
   n <- ncol(parents)
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   fitnessChildren <- rep(NA, 2)
   crossOverPoint <- sample(0:n, size = 1)
   if(crossOverPoint == 0)
@@ -83,7 +83,7 @@ ga_spCrossover <- function(object, parents, ...)
                            parents[2,(crossOverPoint+1):n])
            children[2,] <- c(parents[2,1:crossOverPoint],
                            parents[1,(crossOverPoint+1):n])
-           fitnessChildren <- NA }
+         }
   out <- list(children = children, fitness = fitnessChildren)
   return(out)
 }
@@ -95,7 +95,7 @@ ga_spCrossover <- function(object, parents, ...)
 gabin_Population <- function(object, ...)
 {
 # Generate a random population of nBits 0/1 values of size popSize
-  population <- matrix(NA, nrow = object@popSize, ncol = object@nBits)
+  population <- matrix(as.double(NA), nrow = object@popSize, ncol = object@nBits)
   for(j in 1:object@nBits) 
      { population[,j] <- round(runif(object@popSize)) }
   return(population)
@@ -113,13 +113,13 @@ gabin_spCrossover <- ga_spCrossover
 
 gabin_uCrossover <- function(object, parents, ...)
 {
-# Uniform crossover - da rivedere come in mclustgasel
+# Uniform crossover
   parents <- object@population[parents,,drop = FALSE]
   n <- ncol(parents)
   u <- runif(n)
   children <- parents
-  children[,u > 0.5] <- abs(children[,u > 0.5]-1)
-  out <- list(children = children, fitness = NA)
+  children[1:2, u > 0.5] <- children[2:1, u > 0.5]
+  out <- list(children = children, fitness = rep(NA,2))  
   return(out)
 }
 
@@ -144,7 +144,7 @@ gareal_Population <- function(object, ...)
   min <- object@min
   max <- object@max
   nvars <- length(min)
-  population <- matrix(NA, nrow = object@popSize, ncol = nvars)
+  population <- matrix(as.double(NA), nrow = object@popSize, ncol = nvars)
   for(j in 1:nvars) 
      { population[,j] <- runif(object@popSize, min[j], max[j]) }
   return(population)
@@ -218,12 +218,11 @@ gareal_waCrossover <- function(object, parents, ...)
 # Whole arithmetic crossover
   parents <- object@population[parents,,drop = FALSE]
   n <- ncol(parents)
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   a <- runif(1)
   children[1,] <- a*parents[1,] + (1-a)*parents[2,]
   children[2,] <- a*parents[2,] + (1-a)*parents[1,]
-  fitness <- NA         
-  out <- list(children = children, fitness = fitness)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -232,12 +231,11 @@ gareal_laCrossover <- function(object, parents, ...)
 # Local arithmetic crossover
   parents <- object@population[parents,,drop = FALSE]
   n <- ncol(parents)
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   a <- runif(n)
   children[1,] <- a*parents[1,] + (1-a)*parents[2,]
   children[2,] <- a*parents[2,] + (1-a)*parents[1,]
-  fitness <- NA         
-  out <- list(children = children, fitness = fitness)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -248,14 +246,14 @@ gareal_blxCrossover <- function(object, parents, ...)
   n <- ncol(parents)
   a <- 0.5
   # a <- exp(-pi*iter/max(iter)) # annealing factor
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   for(i in 1:n)
      { x <- sort(parents[,i])
        xl <- max(x[1] - a*(x[2]-x[1]), object@min[i])
        xu <- min(x[2] + a*(x[2]-x[1]), object@max[i])
        children[,i] <- runif(2, xl, xu) 
      }
-  out <- list(children = children, fitness = NA)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -308,7 +306,7 @@ gaperm_Population <- function(object, ...)
 # Generate a random permutation of size popSize in the range [min, max]  
   min <- object@min
   max <- object@max
-  population <- matrix(NA, nrow = object@popSize, ncol = max)
+  population <- matrix(as.double(NA), nrow = object@popSize, ncol = max)
   for(i in 1:object@popSize)
      population[i,] <- sample(min:max, size = max, replace = FALSE)
   return(population)
@@ -332,7 +330,7 @@ gaperm_cxCrossover <- function(object, parents, ...)
   children[1:2,cxPoint] <- parents[2:1,cxPoint]
   while( length(dup <- which(duplicated(children[1,], fromLast = TRUE))) > 0 )
        { children[1:2,dup] <- children[2:1,dup] }
-  out <- list(children = children, fitness = NA)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -343,7 +341,7 @@ gaperm_pmxCrossover <- function(object, parents, ...)
   n <- ncol(parents)
   cxPoints <- sample(1:n, size = 2)
   cxPoints <- seq(min(cxPoints), max(cxPoints))
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   children[,cxPoints] <- parents[,cxPoints]
   for(i in setdiff(1:n, cxPoints))
      { if(!any(parents[2,i] == children[1,cxPoints]))
@@ -353,7 +351,7 @@ gaperm_pmxCrossover <- function(object, parents, ...)
      }
   children[1,is.na(children[1,])] <- setdiff(parents[2,], children[1,])
   children[2,is.na(children[2,])] <- setdiff(parents[1,], children[2,])
-  out <- list(children = children, fitness = NA)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -365,7 +363,7 @@ gaperm_oxCrossover <- function(object, parents, ...)
   #
   cxPoints <- sample(seq(2,n-1), size = 2)
   cxPoints <- seq(min(cxPoints), max(cxPoints))
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   children[,cxPoints] <- parents[,cxPoints]
   #
   for(j in 1:2)
@@ -375,7 +373,7 @@ gaperm_oxCrossover <- function(object, parents, ...)
        children[j,i] <- val
      }
   #
-  out <- list(children = children, fitness = NA)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -386,7 +384,7 @@ gaperm_pbxCrossover <- function(object, parents, ...)
   n <- ncol(parents)
   #
   cxPoints <- unique(sample(1:n, size = n, replace = TRUE))
-  children <- matrix(NA, nrow = 2, ncol = n)
+  children <- matrix(as.double(NA), nrow = 2, ncol = n)
   children[1,cxPoints] <- parents[2,cxPoints]
   children[2,cxPoints] <- parents[1,cxPoints]
   #
@@ -396,7 +394,7 @@ gaperm_pbxCrossover <- function(object, parents, ...)
        children[j,pos] <- val
      }
   #
-  out <- list(children = children, fitness = NA)
+  out <- list(children = children, fitness = rep(NA,2))
   return(out)
 }
 
@@ -467,3 +465,27 @@ gaperm_scrMutation <- function(object, parent, ...)
   mutate <- parent[i]
   return(mutate)
 } 
+
+ga_pmutation <- function(object,  p0 = 0.5, p = 0.01, T = round(object@maxiter/2), ...)
+{
+# variable probability of mutation
+# p0 = initial pmutation
+# p = final pmutation
+# T = maximum iteration after which converges to p
+#
+# Example:
+# p0 = 0.5; p = 0.01; 
+# maxiter = 1000; T = round(maxiter/2); t = seq(maxiter)
+# pm1 = ifelse(t > T, p, p0 - (p0-p)/T * (t-1)) # linear decay
+# pm2 = (p0 - p)*exp(-2*(t-1)/T) + p # exponential decay
+# plot(t, pm1, type = "l")
+# lines(t, pm2, col = 2)
+
+  t <- object@iter
+  # linear decay
+  # pm <- if(t > T) p else p0 - (p0-p)/T * (t-1)
+  # exponential decay
+  pm = (p0 - p)*exp(-2*(t-1)/T) + p
+  #
+  return(pm)
+}

@@ -1,6 +1,7 @@
 \name{plot.ga-method}
 \docType{methods}
 \alias{plot,ga-method}
+\alias{plot.ga}
 
 \title{Plot of Genetic Algorithm search path}
 
@@ -11,9 +12,9 @@
 }
 
 \usage{
-\S4method{plot}{ga}(x, y, ylim, cex.points = 0.8, 
-     col = c("green3", "dodgerblue3"), pch = c(20, 17), lty = c(1,2), 
-     grid = graphics:::grid, \dots)
+\S4method{plot}{ga}(x, y, ylim, cex.points = 0.7, 
+     col = c("green3", "dodgerblue3",  adjustcolor("green3", alpha.f = 0.1)),
+     pch = c(16, 1), lty = c(1,2), grid = graphics:::grid, \dots)
 }
 \arguments{
   \item{x}{An object of class \code{"ga"}.}

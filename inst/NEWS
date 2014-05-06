@@ -1,3 +1,27 @@
+Version 2.1 (2014-05-06)
+
+  o .printShortMatrix is a function to print part of rows/columns of a matrix
+  o print.summary.ga accept arguments to be passed to .printShortMatrix. This
+    allow to shorten the printed output in case of large dimensions for the 
+    matrices containing the suggestions and the final solutions.
+  o plot.ga now shadowed the area between the max and the median of fitness values 
+    at each iteration. Changed to pch from 17 to 1 for means.
+  o Function gaSummary() is embedded in the code, so it cannot be defined by the user.
+  o Added function ga_pmutation for computing variable mutation probability. 
+  o Modified main function ga() to allow for pmutation to be a function. This enables
+    the use of variable mutation rate.
+  o Export plot.ga class in NAMESPACE and used as S4 method.
+  o Computing summaries at each step is done by function gaSummary(), but it
+    may be defined by the user.
+  o Export summary.ga class in NAMESPACE and used as S4 method.
+  o Default for suggestions argument in ga() is set to NULL.
+  o Fixed a bug in gabin_uCrossover.
+  o Added description of slots in the help page for ga-class.
+  o Bug fix on setting maxfitness.
+  o Bug fix on passing seed argument when "snow" parallel is used.
+  o Add explicitly stop clusters if parallel is used.
+  o Parallel computing improving set up of clusters.
+
 Version 2.0 (2013-08-19)
 
    o Option for parallel computing.

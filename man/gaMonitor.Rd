@@ -5,7 +5,7 @@
 \description{A function which prints the average and best fitness values at each iteration of GA search.
 }
 \usage{
-gaMonitor(object, digits = getOption("digits"), ...)
+gaMonitor(object, digits = getOption("digits"), \dots)
 }
 
 \arguments{

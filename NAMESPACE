@@ -3,8 +3,7 @@ exportPattern("^[^\\.]")
 import("methods")
 importFrom("graphics", plot)
 
-export("ga", "gaControl")
+export("ga", "gaControl", "summary.ga", "plot.ga", "gaMonitor", "gaSummary")
+
 exportClasses("ga") 
 exportMethods("print", "show", "summary", "plot")
-
-

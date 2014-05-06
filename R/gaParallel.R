@@ -38,7 +38,7 @@ gaParallel <- function(parallel = TRUE, ...)
     if(parallelType == "snow")
       { 
         # snow functionality on Unix-like systems & Windows
-        cl <- makeCluster(numCores)
+        cl <- makeCluster(numCores, type = "PSOCK")
         attr(parallel, "cluster") <- cl
         # export parent environment
         varlist <- ls(envir = parent.frame(), all.names = TRUE)
@@ -59,8 +59,9 @@ gaParallel <- function(parallel = TRUE, ...)
       }
       else if(parallelType == "multicore")
         { # multicore functionality on Unix-like systems
-          registerDoParallel(cores = numCores) 
-          attr(parallel, "cluster") <- NULL 
+          cl <- makeCluster(numCores, type = "FORK")
+          registerDoParallel(cl, cores = numCores) 
+          attr(parallel, "cluster") <- cl
         }
       else 
         { stop("Only 'snow' and 'multicore' clusters allowed!") }
