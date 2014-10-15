@@ -31,6 +31,7 @@ ga_pmutation(object, p0 = 0.5, p = 0.01, T = round(object@maxiter/2), \dots)
 \seealso{\code{\link{ga}}, \code{\link{ga_Mutation}}}
 
 \examples{
+\dontrun{
 Rastrigin <- function(x1, x2)
 {
   20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
@@ -49,6 +50,7 @@ GA <- ga(type = "real-valued",
          popSize = 50, maxiter = 500, run = 100,
          pmutation = function(...) ga_pmutation(..., p0 = 0.1))
 plot(GA)
+}
 }
 
 %\keyword{ ~kwd1 }

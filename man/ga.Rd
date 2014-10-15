@@ -2,7 +2,7 @@
 \alias{ga}
 \alias{show,ga-method}
 \alias{print,ga-method}
-\alias{gaParallel}
+\alias{startParallel}
 
 \title{Genetic Algorithms}
 
@@ -44,13 +44,13 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{nBits}{a value specifying the number of bits to be used in binary encoded optimizations.}
 
-\item{population}{an R function for randomly generating an initial population.}
+\item{population}{an R function for randomly generating an initial population. See \code{\link{ga_Population}} for available functions.}
 
-\item{selection}{an R function performing selection, i.e., a function which generates a new population of individuals from the current population probabilistically according to individual fitness.}
+\item{selection}{an R function performing selection, i.e., a function which generates a new population of individuals from the current population probabilistically according to individual fitness. See \code{\link{ga_Selection}} for available functions.}
 
-\item{crossover}{an R function performing crossover, i.e., a function which forms offsprings by combining part of the genetic information from their parents.}
+\item{crossover}{an R function performing crossover, i.e., a function which forms offsprings by combining part of the genetic information from their parents. See \code{\link{ga_Crossover}} for available functions.}
 
-\item{mutation}{an R function performing mutation, i.e., a function which randomly alters the values of some genes in a parent chromosome.}
+\item{mutation}{an R function performing mutation, i.e., a function which randomly alters the values of some genes in a parent chromosome. See \code{\link{ga_Mutation}} for available functions.}
 
 \item{popSize}{the population size.}
 
@@ -84,6 +84,13 @@ ga(type = c("binary", "real-valued", "permutation"),
 Genetic algorithms (GAs) are stochastic search algorithms inspired by the basic principles of biological evolution and natural selection. GAs simulate the evolution of living organisms, where the fittest individuals dominate over the weaker ones, by mimicking the biological mechanisms of evolution, such as selection, crossover and mutation.
 
 The \pkg{GA} package is a collection of general purpose functions that provide a flexible set of tools for applying a wide range of genetic algorithm methods.
+
+The \code{ga} function enables the application of GAs to problems where the decision variables are encoded as \code{"binary"}, \code{"real-valued"}, or \code{"permutation"} strings.
+
+Default genetic operators are set via \code{\link{gaControl}}. To retrieve the currently set operators:
+\preformatted{gaControl("binary")}
+\preformatted{gaControl("real-valued")}
+\preformatted{gaControl("permutation")}
 }
   
 \value{Returns an object of class \code{ga-class}. See \code{\link{ga-class}} for a description of available slots information.}

@@ -1,12 +1,12 @@
-gaParallel <- function(parallel = TRUE, ...)
+startParallel <- function(parallel = TRUE, ...)
 {
-# Start parallel computing on GA package
+# Start parallel computing for GA package
   
-  # load package doParallel and all its dependencies (i.e., foreach,
-  # iterators)
-  suppressPackageStartupMessages(availPkgs <- require("doParallel"))
-  if(!availPkgs)
-    stop("Required packages (doParallel, foreach and iterators) for parallel computation not available!")
+  # check availability of parallel and doParallel (their dependencies, i.e. 
+  # foreach and iterators, are specified as Depends on package DESCRIPTION file)
+  if(!all(requireNamespace("parallel", quietly = TRUE),
+        requireNamespace("doParallel", quietly = TRUE)))     
+     stop("packages 'parallel' and 'doParallel' required for parallelization!")
 
   # set default parallel functionality depending on system OS:
   # - snow functionality on Windows OS
@@ -15,7 +15,7 @@ gaParallel <- function(parallel = TRUE, ...)
                     "snow" else "multicore"
 
   # get the current number of cores available
-  numCores <- detectCores()
+  numCores <- parallel::detectCores()
 
   # set parameters for parallelization
   if(is.logical(parallel))
@@ -38,29 +38,31 @@ gaParallel <- function(parallel = TRUE, ...)
     if(parallelType == "snow")
       { 
         # snow functionality on Unix-like systems & Windows
-        cl <- makeCluster(numCores, type = "PSOCK")
+        cl <- parallel::makeCluster(numCores, type = "PSOCK")
         attr(parallel, "cluster") <- cl
         # export parent environment
         varlist <- ls(envir = parent.frame(), all.names = TRUE)
         varlist <- varlist[varlist != "..."]
-        clusterExport(cl, varlist = varlist,
-                          envir = parent.frame()
-                          # envir = parent.env(environment())
-                     )
+        parallel::clusterExport(cl, varlist = varlist,
+                                # envir = parent.env(environment())
+                                envir = parent.frame() )
         # export global environment (workspace)
-        clusterExport(cl, varlist = ls(envir = globalenv(), all.names = TRUE),
-                          envir = globalenv())
+        parallel::clusterExport(cl, 
+                                varlist = ls(envir = globalenv(), 
+                                             all.names = TRUE),
+                                envir = globalenv())
         # load current packages in workers
         pkgs <- .packages()
         lapply(pkgs, function(pkg) 
-               clusterCall(cl, library, package = pkg, character.only = TRUE))
+               parallel::clusterCall(cl, library, package = pkg, 
+                                     character.only = TRUE))
         #
-        registerDoParallel(cl, cores = numCores)
+        doParallel::registerDoParallel(cl, cores = numCores)
       }
       else if(parallelType == "multicore")
         { # multicore functionality on Unix-like systems
-          cl <- makeCluster(numCores, type = "FORK")
-          registerDoParallel(cl, cores = numCores) 
+          cl <- parallel::makeCluster(numCores, type = "FORK")
+          doParallel::registerDoParallel(cl, cores = numCores) 
           attr(parallel, "cluster") <- cl
         }
       else 

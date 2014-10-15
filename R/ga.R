@@ -43,7 +43,7 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
   if(maxiter < 1) 
     { stop("The maximum number of iterations must be at least 1.") }
   if(elitism > popSize) 
-    { stop("The elitism must be larger that population size.") }
+    { stop("The elitism cannot be larger that population size.") }
   if(pcrossover < 0 | pcrossover > 1)
     { stop("Probability of crossover must be between 0 and 1.") }
   if(is.numeric(pmutation))
@@ -88,54 +88,12 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
 
   # Start parallel computing (if needed)
   parallel <- if(is.logical(parallel)) 
-                { if(parallel) gaParallel(parallel) else FALSE }
-              else { gaParallel(parallel) }
+                { if(parallel) startParallel(parallel) else FALSE }
+              else { startParallel(parallel) }
   on.exit(if(parallel)
-            stopCluster(attr(parallel, "cluster")) )
+          parallel::stopCluster(attr(parallel, "cluster")) )
   
-#   ## parallel computing #####################################################
-#   # set default parallel functionality depending on system OS
-#   parallelType <- if(.Platform$OS.type == "windows") 
-#                     "snow" else "multicore"
-#   if(is.character(parallel))
-#     { parallelType <- parallel
-#       parallel <- TRUE }
-#   # start "parallel backend" if needed
-#   if(parallel)
-#     { # load package doParallel and all its dependencies
-#       suppressPackageStartupMessages(availPkgs <- require("doParallel"))
-#       if(!availPkgs)
-#         stop("Required packages for parallel computing not available!")
-#       if(is.numeric(parallel)) 
-#         { # get number of cores from parallel if numeric
-#           numCores <- as.integer(parallel) }
-#       else 
-#         { # get the current number of cores available
-#           numCores <- detectCores() }
-#       if(parallelType == "snow")
-#         { # snow functionality on Unix-like systems & Windows
-#           cl <- makeCluster(numCores)
-#           # export environment
-#           clusterExport(cl, varlist = ls(envir = parent.frame(), 
-#                                          all.names = TRUE),
-#                         envir = parent.frame()
-#                         # envir = parent.env(environment())
-#                        )
-#           # load current packages in workers
-#           pkgs <- .packages()
-#           lapply(pkgs, function(pkg) 
-#                  clusterCall(cl, library, package = pkg, 
-#                              character.only = TRUE))
-#           #
-#           registerDoParallel(cl) 
-#       }
-#       else 
-#         { # multicore functionality on Unix-like systems
-#           registerDoParallel(cores = numCores) }
-#     }
-#   ###########################################################################
-
-  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 4)
+  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 6)
   colnames(fitnessSummary) <- names(gaSummary(rnorm(10)))
   bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
              else         list()
@@ -176,17 +134,18 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
   # start iterations
   for(iter in seq_len(maxiter))
      {
-      # evalute fitness function (if needed) 
+      # evalute fitness function (when needed) 
       if(!parallel)
         { for(i in seq_len(popSize))
              if(is.na(Fitness[i]))
                { Fitness[i] <- fitness(Pop[i,], ...) } 
-        }
+      }
       else
-        { Fitness <- foreach(i = 1:popSize, .combine = "c") %dopar% 
+        { Fitness <- foreach(i = seq_len(popSize), .combine = "c") %dopar%
                      { if(is.na(Fitness[i])) fitness(Pop[i,], ...) 
                        else                  Fitness[i] }
         }
+
       fitnessSummary[iter,] <- gaSummary(Fitness)
       
       # update object
@@ -210,7 +169,7 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                object@run <- object@run + 1 
         }
       if(object@run >= run) break  
-      if(maxfitness < max(Fitness, na.rm = TRUE)) break
+      if(max(Fitness, na.rm = TRUE) >= maxfitness) break
       if(object@iter == maxiter) break  
 
       # PopNew <- matrix(as.double(NA), nrow = popSize, ncol = nvars)
@@ -245,17 +204,7 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
                   Pop[parents,] <- Crossover$children
                   Fitness[parents] <- Crossover$fitness
                 }
-            }
-          #nmating <- popSize
-          #for(i in seq_len(nmating))
-          #   { if(pcrossover > runif(1))
-          #       { parents <- c(i,sample(1:popSize, size = 1))
-          #         Crossover <- crossover(object, parents)
-          #         Pop[i,] <- Crossover$children[1,]
-          #         Fitness[i] <- Crossover$fitness[1]
-          #       }
-          #   }
-             
+            }             
           object@population <- Pop
           object@fitness <- Fitness
         }
@@ -437,18 +386,22 @@ plot.ga <- function(x, y, ylim, cex.points = 0.7,
   iters <- if(is.final) 1:object@iter else 1:object@maxiter
   summary <- object@summary
   if(missing(ylim)) 
-    ylim <- range(object@summary[,c(1,3)], na.rm = TRUE, finite = TRUE)
+    { ylim <- c(max(apply(summary[,c(2,4)], 2, 
+                          function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
+                max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
+  }
+  
   plot(iters, summary[,1], type = "n", ylim = ylim, 
-       xlab = "Generation", ylab = "Fitness value")
+       xlab = "Generation", ylab = "Fitness value", ...)
   if(is.final & is.function(grid)) 
     { grid() }
-  points(iters, summary[,1], type = ifelse(is.final, "b", "p"),
+  points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
          pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
-  points(iters, summary[,2], type = ifelse(is.final, "b", "p"),
+  points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
          pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
   if(is.final)
     { polygon(c(iters, rev(iters)), 
-              c(summary[,3], rev(summary[,1])), 
+              c(summary[,4], rev(summary[,1])), 
               border = FALSE, col = col[3])
       legend("bottomright", legend = c("Best", "Mean"), 
              col = col, pch = pch, lty = lty, pt.cex = cex.points, 
@@ -498,7 +451,8 @@ gaSummary <- function(x, ...)
 {
   # compute summary for each step
   x <- na.exclude(as.vector(x))
-  c(max = max(x), mean = mean(x), median = median(x), min = min(x))
+  q <- fivenum(x)
+  c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
 }
 
   

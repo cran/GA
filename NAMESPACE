@@ -1,9 +1,11 @@
 exportPattern("^[^\\.]")
 
-import("methods")
+import("methods", "foreach", "iterators")
+
 importFrom("graphics", plot)
 
 export("ga", "gaControl", "summary.ga", "plot.ga", "gaMonitor", "gaSummary")
 
-exportClasses("ga") 
+exportClasses("ga")
+
 exportMethods("print", "show", "summary", "plot")

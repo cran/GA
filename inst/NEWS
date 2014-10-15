@@ -1,4 +1,12 @@
-Version 2.1 (2014-05-06)
+Version 2.2 (2014-10)
+
+  o Slight modification to plot method.
+  o Included link in main ga documentation to genetic operators.
+  o Added ga_pmutation() function to allow GAs having variable mutation probability.
+  o pdf files (previously included as vignettes) moved to inst/doc with 
+    corresponding index.html.
+  
+Version 2.1 (2014-05)
 
   o .printShortMatrix is a function to print part of rows/columns of a matrix
   o print.summary.ga accept arguments to be passed to .printShortMatrix. This
@@ -22,19 +30,19 @@ Version 2.1 (2014-05-06)
   o Add explicitly stop clusters if parallel is used.
   o Parallel computing improving set up of clusters.
 
-Version 2.0 (2013-08-19)
+Version 2.0 (2013-08)
 
    o Option for parallel computing.
 
-Version 1.2 (2013-04-24, not on CRAN)
+Version 1.2 (2013-04, not on CRAN)
 
    o Added argument keepBest to include the best solution at each iteration.
    o Bug fix when using suggestions argument.
 
-Version 1.1 (2013-04-08)
+Version 1.1 (2013-04)
 
    o Update citation and references to JSS paper.
 
-Version 1.0 (2012-06-21)
+Version 1.0 (2012-06)
 
-   o Submitted to CRAN.
+   o First release on CRAN.
