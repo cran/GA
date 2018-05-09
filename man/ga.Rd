@@ -10,7 +10,7 @@
 \usage{
 ga(type = c("binary", "real-valued", "permutation"), 
    fitness, \dots,
-   min, max, nBits,
+   lower, upper, nBits,
    population = gaControl(type)$population,
    selection = gaControl(type)$selection,
    crossover = gaControl(type)$crossover, 
@@ -33,19 +33,16 @@ ga(type = c("binary", "real-valued", "permutation"),
                     control = list(fnscale = -1, maxit = 100)),
    keepBest = FALSE,
    parallel = FALSE,
-   monitor = if(interactive()) 
-               { if(is.RStudio()) gaMonitor else gaMonitor2 } 
-             else FALSE,
+   monitor = if(interactive()) gaMonitor else FALSE,
    seed = NULL)
 }
 
 \arguments{
 \item{type}{the type of genetic algorithm to be run depending on the nature of decision variables. Possible values are: 
-
-\tabular{ll}{
-\code{"binary"} \tab for binary representations of decision variables. \cr
-\code{"real-valued"} \tab for optimization problems where the decision variables are floating-point representations of real numbers. \cr
-\code{"permutation"} \tab for problems that involves reordering of a list.
+\describe{
+\item{\code{"binary"}}{for binary representations of decision variables.}
+\item{\code{"real-valued"}}{for optimization problems where the decision variables are floating-point representations of real numbers.}
+\item{\code{"permutation"}}{for problems that involves reordering of a list of objects.}
 }
 }
 
@@ -53,9 +50,9 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{\dots}{additional arguments to be passed to the fitness function. This allows to write fitness functions that keep some variables fixed during the search.}
 
-\item{min}{a vector of length equal to the decision variables providing the minimum of the search space in case of real-valued or permutation encoded optimizations.}
+\item{lower}{a vector of length equal to the decision variables providing the lower bounds of the search space in case of real-valued or permutation encoded optimizations. Formerly this argument was named \code{min}; its usage is allowed but deprecated.}
 
-\item{max}{a vector of length equal to the decision variables providing the maximum of the search space in case of real-valued or permutation encoded optimizations.}
+\item{upper}{a vector of length equal to the decision variables providing the upper bounds of the search space in case of real-valued or permutation encoded optimizations. Formerly this argument was named \code{max}; its usage is allowed but deprecated.}
 
 \item{nBits}{a value specifying the number of bits to be used in binary encoded optimizations.}
 
@@ -94,7 +91,6 @@ ga(type = c("binary", "real-valued", "permutation"),
 \item{optim}{a logical defaulting to \code{FALSE} determining whether or not a local search using general-purpose optimisation algorithms should be used. See argument \code{optimArgs} for further details and finer control.}
 
 \item{optimArgs}{a list controlling the local search algorithm with the following components:
-
 \describe{
 \item{\code{method}}{a string specifying the general-purpose optimisation method to be used, by default is set to \code{"L-BFGS-B"}. Other possible methods are those reported in \code{\link[stats]{optim}}.}
 \item{\code{poptim}}{a value in the range [0,1] specifying the probability of performing a local search at each iteration of GA (default 0.1).}
@@ -105,9 +101,22 @@ ga(type = c("binary", "real-valued", "permutation"),
 
 \item{keepBest}{a logical argument specifying if best solutions at each iteration should be saved in a slot called \code{bestSol}. See \code{\link{ga-class}}.}
 
-\item{parallel}{a logical argument specifying if parallel computing should be used (\code{TRUE}) or not (\code{FALSE}, default) for evaluating the fitness function. This argument could also be used to specify the number of cores to employ; by default, this is taken from \code{\link[parallel]{detectCores}}. Finally, the functionality of parallelization depends on system OS: on Windows only 'snow' type functionality is available, while on Unix/Linux/Mac OSX both 'snow' and 'multicore' (default) functionalities are available.}
+\item{parallel}{
+An optional argument which allows to specify if the Genetic Algorithm should be run sequentially or in parallel. 
 
-\item{monitor}{a logical or an R function which takes as input the current state of the \code{ga-class} object and show the evolution of the search. By default, for interactive sessions, the function \code{\link{gaMonitor}} or \code{\link{gaMonitor2}}, depending on whether or not is an RStudio session, prints the average and best fitness values at each iteration. If set to \code{plot} these information are plotted on a graphical device. Other functions can be written by the user and supplied as argument. In non interactive sessions, by default \code{monitor = FALSE} so any output is suppressed.}
+For a single machine with multiple cores, possible values are: 
+\itemize{
+  \item a logical value specifying if parallel computing should be used (\code{TRUE}) or not (\code{FALSE}, default) for evaluating the fitness function;
+  \item a numerical value which gives the number of cores to employ. By default, this is obtained from the function \code{\link[parallel]{detectCores}}; 
+  \item a character string specifying the type of parallelisation to use. This depends on system OS: on Windows OS only \code{"snow"} type functionality is available, while on Unix/Linux/Mac OSX both \code{"snow"} and \code{"multicore"} (default) functionalities are available.
+}
+In all the cases described above, at the end of the search the cluster is automatically stopped by shutting down the workers.
+
+If a cluster of multiple machines is available, evaluation of the fitness function can be executed in parallel using all, or a subset of, the cores available to the machines belonging to the cluster. However, this option requires more work from the user, who needs to set up and register a parallel back end. 
+In this case the cluster must be explicitely stopped with \code{\link[parallel]{stopCluster}}.
+}
+
+\item{monitor}{a logical or an R function which takes as input the current state of the \code{ga-class} object and show the evolution of the search. By default, for interactive sessions the function \code{\link{gaMonitor}} prints the average and best fitness values at each iteration. If set to \code{plot} these information are plotted on a graphical device. Other functions can be written by the user and supplied as argument. In non interactive sessions, by default \code{monitor = FALSE} so any output is suppressed.}
 
 \item{seed}{an integer value containing the random number generator state. This argument can be used to replicate the results of a GA search. Note that if parallel computing is required, the \pkg{doRNG} package must be installed.}
 
@@ -147,7 +156,7 @@ Luke S. (2013) \emph{Essentials of Metaheuristics}, 2nd edition. Lulu. Freely av
 Scrucca L. (2013). GA: A Package for Genetic Algorithms in R.
 \emph{Journal of Statistical Software}, 53(4), 1-37, \url{http://www.jstatsoft.org/v53/i04/}.
 
-Scrucca L. (2016). On some extensions to GA package: hybrid optimisation, parallelisation and islands evolution. Submitted to \emph{R Journal}. Pre-print available at \url{http://arxiv.org/abs/1605.01931}.
+Scrucca, L. (2017) On some extensions to GA package: hybrid optimisation, parallelisation and islands evolution. \emph{The R Journal}, 9/1, 187-206. \url{https://journal.r-project.org/archive/2017/RJ-2017-008}
 
 Simon D. (2013) \emph{Evolutionary Optimization Algorithms}. John Wiley & Sons.
 
@@ -178,7 +187,7 @@ f <- function(x)  abs(x)+cos(x)
 curve(f, -20, 20)
 
 fitness <- function(x) -f(x)
-GA <- ga(type = "real-valued", fitness = fitness, min = -20, max = 20)
+GA <- ga(type = "real-valued", fitness = fitness, lower = -20, upper = 20)
 summary(GA)
 plot(GA)
 
@@ -198,10 +207,10 @@ monitor <- function(obj)
   Sys.sleep(0.2)
 }
 \dontrun{
-GA <- ga(type = "real-valued", fitness = f, min = -10, max = 10, monitor = monitor)
+GA <- ga(type = "real-valued", fitness = f, lower = -10, upper = 10, monitor = monitor)
 }
 # or if you want to suppress the tracing
-GA <- ga(type = "real-valued", fitness = f, min = -10, max = 10, monitor = NULL)
+GA <- ga(type = "real-valued", fitness = f, lower = -10, upper = 10, monitor = NULL)
 summary(GA)
 
 monitor(GA)
@@ -220,7 +229,7 @@ persp3D(x1, x2, f, theta = 50, phi = 20)
 filled.contour(x1, x2, f, color.palette = jet.colors)
 
 GA <- ga(type = "real-valued", fitness =  function(x) -Rastrigin(x[1], x[2]),
-         min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+         lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
          popSize = 50, maxiter = 100)
 summary(GA)
 plot(GA)
@@ -237,13 +246,13 @@ Rastrigin <- function(x1, x2)
 
 system.time(GA1 <- ga(type = "real-valued", 
                       fitness =  function(x) -Rastrigin(x[1], x[2]),
-                      min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+                      lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
                       popSize = 50, maxiter = 100, monitor = FALSE,
                       seed = 12345))
 
 system.time(GA2 <- ga(type = "real-valued", 
                       fitness =  function(x) -Rastrigin(x[1], x[2]),
-                      min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+                      lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
                       popSize = 50, maxiter = 100, monitor = FALSE,
                       seed = 12345, parallel = TRUE))
 }
@@ -258,7 +267,7 @@ Rastrigin <- function(x1, x2)
 
 GA <- ga(type = "real-valued", 
          fitness =  function(x) -Rastrigin(x[1], x[2]),
-         min = c(-5.12, -5.12), max = c(5.12, 5.12), 
+         lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
          popSize = 50, maxiter = 100,
          optim = TRUE)
 summary(GA)

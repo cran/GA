@@ -37,14 +37,15 @@
 \seealso{\code{\link{gaisl}}}
 
 \examples{
+\dontrun{
 f <- function(x)  abs(x)+cos(x)
 GA <- gaisl(type = "real-valued", 
             fitness = function(x) -f(x), 
-            min = -20, max = 20, run = 10,
-            numIslands = 4, parallel = 2) # CRAN check limits ncores = 2
+            lower = -20, upper = 20, run = 10,
+            numIslands = 4)
 out <- summary(GA)
 print(out)
 str(out)
 }
-
+}
 \keyword{optimize}

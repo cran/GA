@@ -12,8 +12,8 @@ startParallel <- function(parallel = TRUE, ...)
   if(any(class(parallel) == "cluster"))
     { cl <- parallel
       parallel <- TRUE
-      attr(parallel, "type") <- getDoParName()
-      attr(parallel, "cores") <- getDoParWorkers()
+      attr(parallel, "type") <- foreach::getDoParName()
+      attr(parallel, "cores") <- foreach::getDoParWorkers()
       attr(parallel, "cluster") <- cl
       return(parallel)
   }
@@ -80,4 +80,12 @@ startParallel <- function(parallel = TRUE, ...)
   }
 
   return(parallel)
+}
+
+stopParallel <- function(cluster, ...)
+{ 
+# Stop parallel computing for GA package
+  parallel::stopCluster(cluster)
+  foreach::registerDoSEQ()
+  invisible()
 }
