@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
-//                         GENETIC OPERATORS                                //
+//                         GA Rcpp functions                                //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -1345,8 +1345,7 @@ List gaperm_pbxCrossover_Rcpp(RObject object, IntegerVector parents)
   { 
     IntegerVector ch  = children(j,_);
     IntegerVector pos = which_asR(is_na(ch));
-    IntegerVector po = parentsPop(abs(j-1),_); 
-    IntegerVector val = as<IntegerVector>(setdiff_asR(po, ch[cxPoints]));
+    IntegerVector val = as<IntegerVector>(setdiff_asR(parentsPop(j,_), ch[cxPoints]));
     ch[pos] = val;
     children(j,_) = ch;
   }
@@ -1374,17 +1373,17 @@ GA <- ga(type = "permutation",
          fitness = tspFitness, distMatrix = D,
          lower = 1, upper = attr(eurodist, "Size"), 
          # popSize = 50, maxiter = 5000, run = 500, 
-         popSize = 10, maxiter = 1)
+         popSize = 10, maxiter = 2)
 
 i = c(1,5); GA@population[i,]
 set.seed(1)
-out1 = gaperm_pbxCrossover_R(GA, i)
+out1 = GA:::gaperm_pbxCrossover_R(GA, i)
 set.seed(1)
-out2 = gaperm_pbxCrossover_Rcpp(GA, i)
+out2 = GA:::gaperm_pbxCrossover_Rcpp(GA, i)
 out1$children - out2$children
 
-microbenchmark(gaperm_pbxCrossover_R(GA, i),
-               gaperm_pbxCrossover_Rcpp(GA, i),
+microbenchmark(GA:::gaperm_pbxCrossover_R(GA, i),
+               GA:::gaperm_pbxCrossover_Rcpp(GA, i),
                unit = "relative")
 */
 
@@ -1720,5 +1719,92 @@ points(x, prob2, col = 4, pch = 0)
  
 microbenchmark(GA:::optimProbsel_R(x),
                GA:::optimProbsel_Rcpp(x),
+               unit = "relative")
+*/
+
+//
+//  DIFFERENTIAL EVOLUTION OPERATORS
+//
+
+// [[Rcpp::export]]
+List gareal_de_Rcpp(RObject object, Function fitness, double F = NA_REAL, double p = NA_REAL)
+{
+  NumericMatrix pop     = object.slot("population");
+  NumericMatrix newpop  = clone(pop);
+  NumericVector f       = object.slot("fitness");
+  NumericVector newf    = clone(f);
+  int           popSize = pop.nrow();
+  IntegerVector popseq  = Rcpp::seq(0, popSize-1);
+  int           n       = pop.ncol();
+  IntegerVector nseq    = Rcpp::seq(0, n-1); // seq_len(n);
+  NumericVector lb      = object.slot("lower");
+  NumericVector ub      = object.slot("upper");
+  // if(std::isnan(F)) 
+  //   F = 0.8;
+  // else                
+  //   F = std::max(0.0, std::min(F, 2.0));
+  if(!std::isnan(F)) 
+    F = std::max(0.0, std::min(F, 2.0));
+  if(std::isnan(p)) 
+    p = 0.5;
+  else
+    p = std::max(0.0, std::min(p, 1.0));
+  
+  NumericVector x(n);
+  IntegerVector r(3);
+  NumericVector v(n);
+  int J; double fx; double Fi;
+  for(int i=0; i < popSize; i++)
+  {
+    r = Rcpp::sample(popseq, 3, false);
+    if(std::isnan(F))
+      Fi = R::runif(0.5,1.0);
+    else
+      Fi = F;
+    v = pop(r[0],_) + Fi*(pop(r[1],_) - pop(r[2],_));
+    J = Rcpp::sample(nseq, 1, false)[0];
+    x = pop(i,_);
+    for(int j=0; j < n; j++)
+    {
+      double u = R::runif(0,1);
+      if( (u < p) || (j == J) ) 
+        x[j] = v[j];
+      // reset to random amount if outside the bounds
+      if(x[j] < lb[j])
+        x[j] = (lb[j] + R::runif(0.0,1.0)*(ub[j] - lb[j]));
+      if(x[j] > ub[j])
+        x[j] = (ub[j] - R::runif(0.0,1.0)*(ub[j] - lb[j]));
+    }
+    fx = as<double>(fitness(x));
+    // update pop and fitness if improved solution
+    if(fx > f[i])
+    {
+      newf[i] = fx;
+      newpop(i,_) = x;
+    }
+  }
+
+  List out = List::create(Rcpp::Named("population") = newpop,
+                          Rcpp::Named("fitness") = newf);
+  return out;  
+}
+
+/***
+
+library(GA)
+library(microbenchmark)
+Rastrigin <- function(x1, x2) 20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
+fitness <- function(x) -Rastrigin(x[1], x[2])
+obj <- de(fitness = fitness, lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
+          popSize = 10, maxiter = 1, seed = 1)
+
+set.seed(123)
+out1 = GA:::gareal_de_R(obj, fitness, F = 0.8, p = 0.5)
+set.seed(123)
+out2 = GA:::gareal_de_Rcpp(obj, fitness, F = 0.8, p = 0.5)
+identical(out1, out2)
+
+microbenchmark(GA:::gareal_de_R(GA, fitness, F = 0.8, p = 0.5),
+               GA:::gareal_de_Rcpp(GA, fitness, F = 0.8, p = 0.5),
                unit = "relative")
 */

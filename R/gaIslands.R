@@ -124,6 +124,7 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
         { suggestions <- as.matrix(suggestions) }
       if(nvars != ncol(suggestions))
         stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
+      suggestions <- suggestions[seq(popSize),,drop=FALSE]
     }
 
   # check monitor arg
@@ -175,6 +176,7 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
                 elitism = elitism, 
                 pcrossover = pcrossover, 
                 pmutation = pmutation,
+                optim = optim,
                 islands = list(),
                 summary = list(),
                 fitnessValues = list(),
@@ -182,8 +184,14 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
   
   # initialise
   GAs <- vector(mode = "list", length = numIslands)
-  # POPs <- vector(mode = "list", length = numIslands)
-  POPs <- rep(list(suggestions), times = numIslands)
+  POPs <- vector(mode = "list", length = numIslands)
+  # POPs <- rep(list(suggestions), times = numIslands)
+  if(nrow(suggestions) > 0)
+  {
+    POPs <- split.data.frame(suggestions, 
+                             rep(seq(numIslands), 
+                                 each = floor(nrow(suggestions)/numIslands)))
+  }
   sumryStat <- rep(list(matrix(as.double(NA), 
                                nrow = numiter*migrationInterval, ncol = 6, 
                                dimnames = list(NULL, 
@@ -296,6 +304,7 @@ setClass(Class = "gaisl",
                         elitism = "numeric", 
                         pcrossover = "numeric", 
                         pmutation = "numericOrNA",
+                        optim = "logical",
                         islands = "list",
                         summary = "list",
                         fitnessValues = "list",
@@ -352,14 +361,10 @@ setMethod("summary", "gaisl", summary.gaisl)
 print.summary.gaisl <- function(x, digits = getOption("digits"), ...)
 {
   dotargs <- list(...)
-  if (is.null(dotargs$head)) 
-    dotargs$head <- 10
-  if (is.null(dotargs$tail)) 
-    dotargs$tail <- 1
-  if (is.null(dotargs$chead)) 
-    dotargs$chead <- 20
-  if (is.null(dotargs$ctail)) 
-    dotargs$ctail <- 1
+  if(is.null(dotargs$head)) dotargs$head <- 10
+  if(is.null(dotargs$tail)) dotargs$tail <- 2
+  if(is.null(dotargs$chead)) dotargs$chead <- 10
+  if(is.null(dotargs$ctail)) dotargs$ctail <- 2
   
   cat(cli::rule(left = crayon::bold("Islands Genetic Algorithm"),
                 width = min(getOption("width"),40)), "\n\n")
@@ -377,21 +382,22 @@ print.summary.gaisl <- function(x, digits = getOption("digits"), ...)
   cat(paste("Elitism               = ", x$elitism, "\n"))
   cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
   cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
-  if(!is.null(x$domain))
+  if(x$type == "real-valued")
     { cat(paste("Search domain = \n"))
-      print(x$domain, digits = digits)
-  }
+      do.call(".printShortMatrix", 
+              c(list(x$domain, digits = digits), 
+                dotargs[c("head", "tail", "chead", "ctail")]))
+    }
+
   cat("\nGA results: \n")
   cat(paste("Iterations              =", format(x$iter, digits = digits), "\n"))
   cat(paste("Epochs                  =", format(x$epoch, digits = digits), "\n"))
   cat(paste("Fitness function values = "))
   cat(format(x$fitnessValues, digits = digits), "\n")
   cat(paste("Solutions = \n"))
-  .printShortMatrix(x$solutions, digits = digits, 
-                    head = dotargs$head, 
-                    tail = dotargs$head, 
-                    chead = dotargs$chead, 
-                    ctail = dotargs$ctail)
+  do.call(".printShortMatrix", 
+          c(list(x$solution, digits = digits), 
+            dotargs[c("head", "tail", "chead", "ctail")]))
   invisible()
 }
 

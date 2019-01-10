@@ -60,3 +60,12 @@ export("binary2decimal", "decimal2binary",
        "reflectSolution", "repairSolution", 
        "GAStartupMessage", 
        "jet.colors", "spectral.colors", "bl2gr.colors")
+
+export("de")
+exportClasses("de")
+exportMethods("print", "show", "summary", "plot")
+export("summary.de", "print.summary.de")
+S3method("summary", "de")
+S3method("print", "summary.de")
+
+export("gareal_de")
