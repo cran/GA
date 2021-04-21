@@ -1,9 +1,9 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 library(knitr)
 opts_chunk$set(fig.align = "center", 
                out.width = "80%",
                fig.width = 6, fig.height = 5,
-               dev.args=list(pointsize=10),
+               dev = "svg",
                par = TRUE, # needed for setting hook 
                collapse = TRUE, # collapse input & ouput code in chunks
                warning = FALSE)
@@ -13,11 +13,11 @@ knit_hooks$set(par = function(before, options, envir)
        par(family = "sans", mar=c(4.1,4.1,1.1,1.1), mgp=c(3,1,0), tcl=-0.5)
 })
 
-## ---- message = FALSE, echo=1--------------------------------------------
+## ---- message = FALSE, echo=1-------------------------------------------------
 library(GA)
 cat(GA:::GAStartupMessage(), sep="")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 f <- function(x)  (x^2+x)*cos(x)
 lbound <- -10; ubound <- 10
 curve(f, from = lbound, to = ubound, n = 1000)
@@ -29,7 +29,7 @@ plot(GA)
 curve(f, from = lbound, to = ubound, n = 1000)
 points(GA@solution, GA@fitnessValue, col = 2, pch = 19)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 Rastrigin <- function(x1, x2)
 {
   20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
@@ -40,7 +40,7 @@ f <- outer(x1, x2, Rastrigin)
 persp3D(x1, x2, f, theta = 50, phi = 20, col.palette = bl2gr.colors)
 filled.contour(x1, x2, f, color.palette = bl2gr.colors)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GA <- ga(type = "real-valued", 
          fitness =  function(x) -Rastrigin(x[1], x[2]),
          lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
@@ -48,14 +48,14 @@ GA <- ga(type = "real-valued",
 summary(GA)
 plot(GA)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 filled.contour(x1, x2, f, color.palette = bl2gr.colors, 
   plot.axes = { axis(1); axis(2); 
                 points(GA@solution[,1], GA@solution[,2], 
                        pch = 3, cex = 2, col = "white", lwd = 2) }
 )
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  monitor <- function(obj)
 #  {
 #    contour(x1, x2, f, drawlabels = FALSE, col = grey(0.5))
@@ -70,7 +70,7 @@ filled.contour(x1, x2, f, color.palette = bl2gr.colors,
 #           popSize = 50, maxiter = 100,
 #           monitor = monitor)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 suggestedSol <- matrix(c(0.2,1.5,-1.5,0.5), nrow = 2, ncol = 2, byrow = TRUE)
 GA1 <- ga(type = "real-valued", 
           fitness =  function(x) -Rastrigin(x[1], x[2]),
@@ -79,7 +79,7 @@ GA1 <- ga(type = "real-valued",
           popSize = 50, maxiter = 1)
 head(GA1@population)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GA <- ga(type = "real-valued", 
          fitness =  function(x) -Rastrigin(x[1], x[2]),
          lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
@@ -87,7 +87,7 @@ GA <- ga(type = "real-valued",
          popSize = 50, maxiter = 100)
 summary(GA)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 f <- function(x)
   { 100 * (x[1]^2 - x[2])^2 + (1 - x[1])^2 }
 
@@ -97,7 +97,7 @@ c1 <- function(x)
 c2 <- function(x) 
   { 10 - x[1]*x[2] }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ngrid <- 250
 x1 <- seq(0, 1, length = ngrid)
 x2 <- seq(0, 13, length = ngrid)
@@ -111,15 +111,15 @@ image(x1, x2, matrix(ifelse(apply(x12, 1, c2) <= 0, 0, NA), ngrid, ngrid),
 contour(x1, x2, matrix(apply(x12, 1, f), ngrid, ngrid), 
         nlevels = 21, add = TRUE)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 x <- c(0.8122, 12.3104)
 f(x)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 c1(x)
 c2(x)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 fitness <- function(x) 
 { 
   f <- -f(x)                         # we need to maximise -f(x)
@@ -129,7 +129,7 @@ fitness <- function(x)
   f - penalty1 - penalty2            # fitness function value
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GA <- ga("real-valued", fitness = fitness, 
          lower = c(0,0), upper = c(1,13), 
          # selection = GA:::gareal_lsSelection_R,
@@ -141,7 +141,7 @@ f(GA@solution)
 c1(GA@solution)
 c2(GA@solution)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(x1, x2, type = "n", xaxs = "i", yaxs = "i")
 image(x1, x2, matrix(ifelse(apply(x12, 1, c1) <= 0, 0, NA), ngrid, ngrid), 
       col = col[1], add = TRUE)
@@ -151,7 +151,7 @@ contour(x1, x2, matrix(apply(x12, 1, f), ngrid, ngrid),
         nlevels = 21, add = TRUE)
 points(GA@solution[1], GA@solution[2], col = "dodgerblue3", pch = 3)  # GA solution
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 AQL   <- 0.01; alpha <- 0.05
 LTPD  <- 0.06; beta  <- 0.10
 plot(0, 0, type="n", xlim=c(0,0.2), ylim=c(0,1), bty="l", xaxs="i", yaxs="i", 
@@ -164,7 +164,7 @@ points(c(AQL, LTPD), c(1-alpha, beta), pch=16)
 text(AQL, 1-alpha, labels=expression(paste("(", AQL, ", ", 1-alpha, ")")), pos=4)
 text(LTPD, beta, labels=expression(paste("(", LTPD, ", ", beta, ")")), pos=4)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 decode1 <- function(x)
 { 
   x <- gray2binary(x)
@@ -198,7 +198,7 @@ GA1 <- ga(type = "binary", fitness = fitness1,
 summary(GA1)
 decode1(GA1@solution)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(0,0,type="n", xlim=c(0,0.2), ylim=c(0,1), bty="l", xaxs="i", yaxs="i", 
      ylab=expression(P[a]), xlab=expression(p))
 lines(c(0,AQL), rep(1-alpha,2), lty=2, col="grey")
@@ -213,7 +213,7 @@ p <- seq(0, 0.2, by = 0.001)
 Pa <- pbinom(2, 87, p)
 lines(p, Pa, col = 2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 decode2 <- function(x)
 { 
   n <- floor(x[1])         # sample size
@@ -239,7 +239,7 @@ GA2 <- ga(type = "real-valued", fitness = fitness2,
 summary(GA2)
 t(apply(GA2@solution, 1, decode2))
 
-## ---- eval=FALSE, echo=-(1:2)--------------------------------------------
+## ---- eval=FALSE, echo=-(1:2)-------------------------------------------------
 #  set.seed(20181111)
 #  options(digits = 4)
 #  nrep <- 100
@@ -280,7 +280,7 @@ t(apply(GA2@solution, 1, decode2))
 #  # Binary      160.8 48.31 100 129 146.0 172.2  337
 #  # Real-valued 122.5 27.99 100 104 110.5 130.0  246
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GA <- ga(type = "real-valued", 
          fitness =  function(x) -Rastrigin(x[1], x[2]),
          lower = c(-5.12, -5.12), upper = c(5.12, 5.12), 
@@ -289,7 +289,7 @@ GA <- ga(type = "real-valued",
 summary(GA)
 plot(GA)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  library(GA)
 #  fitness <- function(x)
 #  {
@@ -326,26 +326,26 @@ plot(GA)
 #  ## 3  GA3           10 263.285 26.3285    1.852
 #  ## 4  GA4           10 155.777 15.5777    1.096
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  library(doParallel)
 #  workers <- rep(c("141.250.100.1", "141.250.105.3"), each = 8)
 #  cl <- makeCluster(workers, type = "PSOCK")
 #  registerDoParallel(cl)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  clusterExport(cl, varlist = c("x", "fun"))
 #  clusterCall(cl, library, package = "mclust", character.only = TRUE)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  GA5 <- ga(type = "real-valued",
 #            fitness = fitness, lower = 0, upper = 1,
 #            popSize = 50, maxiter = 100, monitor = FALSE,
 #            seed = 12345, parallel = cl)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  stopCluster(cl)
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 # run not in parallel because it is not allowed in CRAN checks
 GA <- gaisl(type = "real-valued", 
             fitness =  function(x) -Rastrigin(x[1], x[2]),
@@ -357,7 +357,7 @@ GA <- gaisl(type = "real-valued",
             migrationInterval = 50,
             parallel = FALSE)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  GA <- gaisl(type = "real-valued",
 #              fitness =  function(x) -Rastrigin(x[1], x[2]),
 #              lower = c(-5.12, -5.12), upper = c(5.12, 5.12),
@@ -367,11 +367,11 @@ GA <- gaisl(type = "real-valued",
 #              migrationRate = 0.2,
 #              migrationInterval = 50)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summary(GA)
 plot(GA, log = "x")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  data(fat, package = "UsingR")
 #  mod <- lm(body.fat.siri ~ age + weight + height + neck + chest + abdomen +
 #            hip + thigh + knee + ankle + bicep + forearm + wrist, data = fat)
@@ -409,6 +409,44 @@ plot(GA, log = "x")
 #  # to clear cache use
 #  forget(mfitness)
 
-## ------------------------------------------------------------------------
+## ---- fig.width=6, fig.height=8-----------------------------------------------
+Rastrigin <- function(x1, x2)
+{
+  20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
+}
+
+postfit <- function(object, ...)
+{
+  pop <- object@population
+  # update info
+  if(!exists(".pop", envir = globalenv()))
+    assign(".pop", NULL, envir = globalenv())
+  .pop <- get(".pop", envir = globalenv())
+  assign(".pop", append(.pop, list(pop)), envir = globalenv()) 
+  # output the input ga object (this is needed!!)
+  object 
+}
+
+GA <- ga(type = "real-valued",
+         fitness =  function(x) -Rastrigin(x[1], x[2]),
+         lower = c(-5.12, -5.12), upper = c(5.12, 5.12),
+         popSize = 50, maxiter = 100, seed = 1,
+         postFitness = postfit)
+
+str(.pop, max.level = 1, list.len = 5)
+
+x1 <- x2 <- seq(-5.12, 5.12, by = 0.1)
+f <- outer(x1, x2, Rastrigin)
+iter_to_show = c(1,5,10,20,50,100)
+par(mfrow = c(3,2), mar = c(2,2,2,1),
+    mgp = c(1, 0.4, 0), tck = -.01)
+for(i in seq(iter_to_show))
+{
+  contour(x1, x2, f, drawlabels = FALSE, col = "grey50")
+  title(paste("Iter =", iter_to_show[i]))
+  points(.pop[[iter_to_show[i]]], pch = 20, col = "forestgreen")
+}
+
+## -----------------------------------------------------------------------------
 sessionInfo()
 

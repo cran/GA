@@ -30,7 +30,7 @@ de(fitness,
 
 \item{stepsize}{the stepsize or weighting factor. A value in the interval [0,2], by default set to 0.8. If set at \code{NA} a random value is selected in the interval [0.5, 1.0] (so called dithering).}
 
-\item{\dots}{additional arguments to be passed to the fitness function. This allows to write fitness functions that keep some variables fixed during the search.}
+\item{\dots}{additional arguments to be passed to the \code{\link{ga}} function.}
 }
 
 \details{
@@ -45,8 +45,8 @@ The DE selection operator is defined by \code{\link{gareal_de}} with parameters 
 
 \references{
 
-Scrucca L. (2013). GA: A Package for Genetic Algorithms in R.
-\emph{Journal of Statistical Software}, 53(4), 1-37, \url{http://www.jstatsoft.org/v53/i04/}.
+Scrucca L. (2013) GA: A Package for Genetic Algorithms in R.
+\emph{Journal of Statistical Software}, 53(4), 1-37, \url{https://www.jstatsoft.org/v53/i04/}.
 
 Simon D. (2013) \emph{Evolutionary Optimization Algorithms}. John Wiley & Sons.
 
@@ -133,6 +133,26 @@ filled.contour(x1, x2, f, color.palette = bl2gr.colors,
                plot.axes = { axis(1); axis(2); 
                              points(DE@solution, 
                                     col = "yellow", pch = 3, lwd = 2) })
+                                    
+# 5) Curve fitting example (see Scrucca JSS 2013)
+
+\dontrun{
+# subset of data from data(trees, package = "spuRs")
+tree <- data.frame(Age = c(2.44, 12.44, 22.44, 32.44, 42.44, 52.44, 62.44, 
+                           72.44, 82.44, 92.44, 102.44, 112.44),
+                   Vol = c(2.2, 20, 93, 262, 476, 705, 967, 1203, 1409, 
+                           1659, 1898, 2106))
+richards <- function(x, theta) 
+  { theta[1]*(1 - exp(-theta[2]*x))^theta[3] }
+fitnessL2 <- function(theta, x, y) 
+  { -sum((y - richards(x, theta))^2) }
+DE <- de(fitness = fitnessL2, x = tree$Age, y = tree$Vol, 
+         lower = c(3000, 0, 2), upper = c(4000, 1, 4),
+         popSize = 500, maxiter = 1000, run = 100, 
+         names = c("a", "b", "c"))
+summary(DE)
+}
+
 }
 
 \keyword{optimize}

@@ -54,6 +54,7 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
     { stop("The maximum number of iterations must be at least 1.") }
   if(elitism > popSize) 
     { stop("The elitism cannot be larger that population size.") }
+  elitism <- as.integer(elitism)
   if(pcrossover < 0 | pcrossover > 1)
     { stop("Probability of crossover must be between 0 and 1.") }
   if(is.numeric(pmutation))
@@ -124,7 +125,8 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
         { suggestions <- as.matrix(suggestions) }
       if(nvars != ncol(suggestions))
         stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
-      suggestions <- suggestions[seq(popSize),,drop=FALSE]
+      ng <- min(nrow(suggestions), popSize)
+      suggestions <- suggestions[seq(ng),,drop=FALSE]
     }
 
   # check monitor arg
@@ -188,9 +190,10 @@ gaisl <- function(type = c("binary", "real-valued", "permutation"),
   # POPs <- rep(list(suggestions), times = numIslands)
   if(nrow(suggestions) > 0)
   {
-    POPs <- split.data.frame(suggestions, 
-                             rep(seq(numIslands), 
-                                 each = floor(nrow(suggestions)/numIslands)))
+    # POPs <- split.data.frame(suggestions, 
+    #                          rep(seq(numIslands), 
+    #                              each = floor(nrow(suggestions)/numIslands)))
+    POPs <- rep(list(suggestions), numIslands)
   }
   sumryStat <- rep(list(matrix(as.double(NA), 
                                nrow = numiter*migrationInterval, ncol = 6, 

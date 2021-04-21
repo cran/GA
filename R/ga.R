@@ -52,6 +52,7 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
     { stop("The maximum number of iterations must be at least 1.") }
   if(elitism > popSize) 
     { stop("The elitism cannot be larger that population size.") }
+  elitism <- as.integer(elitism)
   if(pcrossover < 0 | pcrossover > 1)
     { stop("Probability of crossover must be between 0 and 1.") }
   if(is.numeric(pmutation))
@@ -244,13 +245,6 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
       object@population <- Pop
       object@fitness <- Fitness
       
-      # update iterations summary
-      fitnessSummary[iter,] <- gaSummary(object@fitness)
-      object@summary <- fitnessSummary
-  
-      if(is.function(monitor)) 
-        { monitor(object) }
-      
       # Local search optimisation
       if(optim & (type == "real-valued"))
       {
@@ -290,16 +284,24 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
       }
       
       if(keepBest) 
-        { object@bestSol[[iter]] <- unique(Pop[Fitness == max(Fitness, na.rm = TRUE),,drop=FALSE]) }
-      
+      { 
+        object@bestSol[[iter]] <- unique(Pop[Fitness == max(Fitness, na.rm = TRUE),, drop=FALSE]) 
+      }
+
       # apply a user's defined function to update the GA object
       if(is.function(postFitness))
-        { 
-          # object <- postFitness(object, ...) 
-          object <- do.call(postFitness, c(object, callArgs)) 
-          Fitness <- object@fitness
-          Pop <- object@population
+      { 
+        object <- do.call(postFitness, c(object, callArgs))
+        Fitness <- object@fitness
+        Pop <- object@population
       }
+
+      # update iterations summary
+      fitnessSummary[iter,] <- gaSummary(object@fitness)
+      object@summary <- fitnessSummary
+
+      if(is.function(monitor)) 
+        { monitor(object) }
 
       # check stopping criteria
       if(iter > 1)
@@ -314,7 +316,9 @@ ga <- function(type = c("binary", "real-valued", "permutation"),
         
       # selection
       if(is.function(selection))
-        { sel <- selection(object)
+        { 
+          sel <- selection(object)
+          # sel <- do.call(selection, c(object, callArgs))
           Pop <- sel$population
           Fitness <- sel$fitness
         }
