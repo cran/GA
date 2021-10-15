@@ -18,9 +18,9 @@ library(knitr)
 opts_chunk$set(fig.align = "center", 
                out.width = "80%",
                fig.width = 6, fig.height = 5,
-               dev = "svg",
+               dev = "svg", fig.ext = "svg",
                par = TRUE, # needed for setting hook 
-               collapse = TRUE, # collapse input & ouput code in chunks
+               collapse = TRUE, # collapse input & output code in chunks
                warning = FALSE)
 
 knit_hooks$set(par = function(before, options, envir)
@@ -649,9 +649,9 @@ for(i in seq(iter_to_show))
 
 McCallum, E. and Weston, S. (2011) *Parallel R*. O’Reilly Media.
 
-Scrucca, L. (2013) GA: A Package for Genetic Algorithms in R. *Journal of Statistical Software*, 53/4, 1-37. URL https://www.jstatsoft.org/v53/i04/
+Scrucca, L. (2013) GA: A Package for Genetic Algorithms in R. *Journal of Statistical Software*, 53/4, 1-37. https://doi.org/10.18637/jss.v053.i04
 
-Scrucca, L. (2017) On some extensions to GA package: hybrid optimisation, parallelisation and islands evolution. *The R Journal*, 9/1, 187–206. https://journal.r-project.org/archive/2017/RJ-2017-008/
+Scrucca, L. (2017) On some extensions to GA package: hybrid optimisation, parallelisation and islands evolution. *The R Journal*, 9/1, 187–206. https://doi.org/10.32614/RJ-2017-008
 
 
 ----

@@ -3,9 +3,9 @@ library(knitr)
 opts_chunk$set(fig.align = "center", 
                out.width = "80%",
                fig.width = 6, fig.height = 5,
-               dev = "svg",
+               dev = "svg", fig.ext = "svg",
                par = TRUE, # needed for setting hook 
-               collapse = TRUE, # collapse input & ouput code in chunks
+               collapse = TRUE, # collapse input & output code in chunks
                warning = FALSE)
 
 knit_hooks$set(par = function(before, options, envir)
