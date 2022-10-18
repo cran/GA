@@ -1,6 +1,6 @@
-f0b260f2403c8d38aa09f521ea9073ed *DESCRIPTION
+23b8ab4ae35d8b3836e759ddf608ac09 *DESCRIPTION
 ee988bc7963828ff85e578f04967686f *NAMESPACE
-881a9494f6b3186c5202ccc7ff410175 *NEWS.md
+1870f1a643e14d6b0155d4cd47ebc2d4 *NEWS.md
 a631840213ac4bbc8a0709b1ed9d1e1d *R/RcppExports.R
 6f54eed3f158f58666e54d880d287872 *R/ga.R
 d8427e0e23078480de3b5f02e432e1f0 *R/gaControl.R
@@ -10,13 +10,13 @@ c192920eda22edaddd7f73243f91cd3a *R/gaIslands.R
 c206969114fe2277c081324c41e81186 *R/miscfun.R
 f8106fb98319440635f64e137186f6c3 *R/parallel.R
 1d71196d66369602cd96eb25b40cb91a *R/zzz.R
-508b5ffa144b3ebc9099ad68476c5ec7 *README.md
-63d1be4241209742490faaa52261bde6 *build/partial.rdb
-324633ac47839e0bfd1282afdf7f1ecc *build/vignette.rds
+184013b1084f25d3b52e0adb44ecc9e1 *README.md
+0c6ad5b3446721162c89589e8077ab1c *build/partial.rdb
+e55095dee020dc7a39398391503f363a *build/vignette.rds
 04fb24a0f32cbc3a5eed7ba0bbc4f3ef *inst/CITATION
 55c9840ece30fa96f3dafe0f0ffa97b8 *inst/doc/GA.R
 b46bd37bd849b46cb05f57f4f832cd30 *inst/doc/GA.Rmd
-3a19e6f5aaebae1bcd405dcf2ad2e6bd *inst/doc/GA.html
+1888186224d8484b63f853d11a10a64f *inst/doc/GA.html
 30bc926797c3dd1c51a512e29d1121b2 *man/GA-internal.Rd
 389c6bc65ab61e8c23542caafd4977ca *man/GA-package.Rd
 70691d1b6ec2ef9e440e7a3c14374ecc *man/binary2decimal.Rd
@@ -49,7 +49,7 @@ dac1db35202af3a1cd18690250ca0cc2 *man/persp3D.Rd
 a5b0f0d322cbc5507d4eefa771d51533 *man/summary.gaisl-method.Rd
 2ea30df53eb28a3c45a2c96550669843 *src/Makevars
 267f6dee398599a1901d31934d23704d *src/RcppExports.cpp
-6e0b81e4f23a918373f1343df5d5703a *src/genope.cpp
+b0cf6d69a2b85ddbcee61011d323e34c *src/genope.cpp
 ce4e26d83f85c2183c69304754e2fd1a *src/init.c
 b46bd37bd849b46cb05f57f4f832cd30 *vignettes/GA.Rmd
 71148153fcf7f0388c1ae6f5da2e9f06 *vignettes/vignette.css
