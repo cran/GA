@@ -13,7 +13,7 @@ knit_hooks$set(par = function(before, options, envir)
        par(family = "sans", mar=c(4.1,4.1,1.1,1.1), mgp=c(3,1,0), tcl=-0.5)
 })
 
-## ---- message = FALSE, echo=1-------------------------------------------------
+## ----message = FALSE, echo=1--------------------------------------------------
 library(GA)
 cat(GA:::GAStartupMessage(), sep="")
 
@@ -55,7 +55,7 @@ filled.contour(x1, x2, f, color.palette = bl2gr.colors,
                        pch = 3, cex = 2, col = "white", lwd = 2) }
 )
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  monitor <- function(obj)
 #  {
 #    contour(x1, x2, f, drawlabels = FALSE, col = grey(0.5))
@@ -239,7 +239,7 @@ GA2 <- ga(type = "real-valued", fitness = fitness2,
 summary(GA2)
 t(apply(GA2@solution, 1, decode2))
 
-## ---- eval=FALSE, echo=-(1:2)-------------------------------------------------
+## ----eval=FALSE, echo=-(1:2)--------------------------------------------------
 #  set.seed(20181111)
 #  options(digits = 4)
 #  nrep <- 100
@@ -289,7 +289,7 @@ GA <- ga(type = "real-valued",
 summary(GA)
 plot(GA)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(GA)
 #  fitness <- function(x)
 #  {
@@ -326,26 +326,26 @@ plot(GA)
 #  ## 3  GA3           10 263.285 26.3285    1.852
 #  ## 4  GA4           10 155.777 15.5777    1.096
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(doParallel)
 #  workers <- rep(c("141.250.100.1", "141.250.105.3"), each = 8)
 #  cl <- makeCluster(workers, type = "PSOCK")
 #  registerDoParallel(cl)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  clusterExport(cl, varlist = c("x", "fun"))
 #  clusterCall(cl, library, package = "mclust", character.only = TRUE)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  GA5 <- ga(type = "real-valued",
 #            fitness = fitness, lower = 0, upper = 1,
 #            popSize = 50, maxiter = 100, monitor = FALSE,
 #            seed = 12345, parallel = cl)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  stopCluster(cl)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 # run not in parallel because it is not allowed in CRAN checks
 GA <- gaisl(type = "real-valued", 
             fitness =  function(x) -Rastrigin(x[1], x[2]),
@@ -357,7 +357,7 @@ GA <- gaisl(type = "real-valued",
             migrationInterval = 50,
             parallel = FALSE)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  GA <- gaisl(type = "real-valued",
 #              fitness =  function(x) -Rastrigin(x[1], x[2]),
 #              lower = c(-5.12, -5.12), upper = c(5.12, 5.12),
@@ -371,7 +371,7 @@ GA <- gaisl(type = "real-valued",
 summary(GA)
 plot(GA, log = "x")
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  data(fat, package = "UsingR")
 #  mod <- lm(body.fat.siri ~ age + weight + height + neck + chest + abdomen +
 #            hip + thigh + knee + ankle + bicep + forearm + wrist, data = fat)
@@ -409,7 +409,7 @@ plot(GA, log = "x")
 #  # to clear cache use
 #  forget(mfitness)
 
-## ---- fig.width=6, fig.height=8-----------------------------------------------
+## ----fig.width=6, fig.height=8------------------------------------------------
 Rastrigin <- function(x1, x2)
 {
   20 + x1^2 + x2^2 - 10*(cos(2*pi*x1) + cos(2*pi*x2))
